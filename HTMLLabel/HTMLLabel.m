@@ -853,7 +853,11 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     }
     else if ([elementName isEqualToString:@"p"] || [elementName isEqualToString:@"div"])
     {
-        [self addLinebreaks:2];
+        if (attributes.listLevel > 0) {
+            [self addLinebreaks:0];
+        } else {
+            [self addLinebreaks:2];
+        }
     }
     else if ([elementName isEqualToString:@"ul"] || [elementName isEqualToString:@"ol"])
     {
