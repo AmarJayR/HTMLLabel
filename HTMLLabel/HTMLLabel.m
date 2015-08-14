@@ -139,12 +139,12 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 #pragma mark HTML token
 
 
-@interface HTMLTokenAttributes : NSObject <NSMutableCopying>
+@interface HTMLLabelTokenizerAttributes : NSObject <NSMutableCopying>
 
 @property (nonatomic, copy) NSString *href;
 @property (nonatomic, copy) NSString *tag;
 @property (nonatomic, copy) NSArray *classNames;
-@property (nonatomic, strong) HTMLTokenAttributes *parent;
+@property (nonatomic, strong) HTMLLabelTokenizerAttributes *parent;
 @property (nonatomic, assign) BOOL active;
 @property (nonatomic, assign) BOOL list;
 @property (nonatomic, assign) BOOL bullet;
@@ -157,9 +157,9 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 @class HTMLStyles;
 
 
-@interface HTMLToken : NSObject
+@interface HTMLLabelTokenizer : NSObject
 
-@property (nonatomic, strong) HTMLTokenAttributes *attributes;
+@property (nonatomic, strong) HTMLLabelTokenizerAttributes *attributes;
 @property (nonatomic, copy) NSString *text;
 
 - (BOOL)isSpace;
@@ -328,7 +328,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 
 - (id)initWithString:(NSString *)selectorString;
 - (NSString *)stringRepresentation;
-- (BOOL)matchesTokenAttributes:(HTMLTokenAttributes *)attributes;
+- (BOOL)matchesTokenAttributes:(HTMLLabelTokenizerAttributes *)attributes;
 
 @end
 
@@ -410,7 +410,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     return NO;
 }
 
-- (BOOL)matchesTokenAttributes:(HTMLTokenAttributes *)attributes
+- (BOOL)matchesTokenAttributes:(HTMLLabelTokenizerAttributes *)attributes
 {
     //check tag
     if (![_tag length] || [_tag isEqualToString:@"*"] || [attributes.tag isEqualToString:_tag])
@@ -589,10 +589,10 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     return [_stylesBySelector objectForKey:selector];
 }
 
-- (HTMLStyles *)stylesForToken:(HTMLToken *)token
+- (HTMLStyles *)stylesForToken:(HTMLLabelTokenizer *)token
 {
     HTMLStyles *allStyles = nil;
-    HTMLTokenAttributes *attributes = token.attributes;
+    HTMLLabelTokenizerAttributes *attributes = token.attributes;
     while (attributes)
     {
         HTMLStyles *styles = [[HTMLStyles alloc] init];
@@ -621,11 +621,11 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 #pragma mark HTML parsing
 
 
-@implementation HTMLTokenAttributes
+@implementation HTMLLabelTokenizerAttributes
 
 - (id)mutableCopyWithZone:(NSZone *)zone
 {
-    HTMLTokenAttributes *copy = [[HTMLTokenAttributes alloc] init];
+    HTMLLabelTokenizerAttributes *copy = [[HTMLLabelTokenizerAttributes alloc] init];
     copy.href = _href;
     copy.tag = _tag;
     copy.classNames = _classNames;
@@ -638,7 +638,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 @end
 
 
-@implementation HTMLToken
+@implementation HTMLLabelTokenizer
 
 - (BOOL)isSpace
 {
@@ -684,7 +684,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 @end
 
 
-@interface HTMLTokenizer : NSObject <NSXMLParserDelegate>
+@interface HTMLLabelTokenizerizer : NSObject <NSXMLParserDelegate>
 
 @property (nonatomic, strong) NSMutableArray *tokens;
 @property (nonatomic, strong) NSMutableArray *stack;
@@ -696,7 +696,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 @end
 
 
-@implementation HTMLTokenizer
+@implementation HTMLLabelTokenizerizer
 
 - (NSCache *)cache
 {
@@ -792,7 +792,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
         if (i > 0 && ![[_tokens lastObject] isWhitespace])
         {
             //space
-            HTMLToken *token = [[HTMLToken alloc] init];
+            HTMLLabelTokenizer *token = [[HTMLLabelTokenizer alloc] init];
             token.attributes = [_stack lastObject];
             token.text = @" ";
             [_tokens addObject:token];
@@ -800,7 +800,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
         if ([word length])
         {
             //word
-            HTMLToken *token = [[HTMLToken alloc] init];
+            HTMLLabelTokenizer *token = [[HTMLLabelTokenizer alloc] init];
             token.attributes = [_stack lastObject];
             token.text = word;
             [_tokens addObject:token];
@@ -815,7 +815,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 {
     if ([_tokens count] && count)
     {
-        HTMLToken *linebreak = [[HTMLToken alloc] init];
+        HTMLLabelTokenizer *linebreak = [[HTMLLabelTokenizer alloc] init];
         linebreak.attributes = [_stack lastObject];
         linebreak.text = @"\n";
         
@@ -837,7 +837,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 {
 	[self endText];
     
-    HTMLTokenAttributes *attributes = [[_stack lastObject] mutableCopy] ?: [[HTMLTokenAttributes alloc] init];
+    HTMLLabelTokenizerAttributes *attributes = [[_stack lastObject] mutableCopy] ?: [[HTMLLabelTokenizerAttributes alloc] init];
     attributes.parent = [_stack lastObject];
     elementName = [elementName lowercaseString];
     attributes.tag = elementName;
@@ -876,11 +876,11 @@ NSString *const HTMLTextAlignment = @"textAlignment";
         if (attributes.nextListIndex)
         {
             bullet = [NSString stringWithFormat:@"%@.", @(attributes.nextListIndex)];
-            ((HTMLTokenAttributes *)[_stack lastObject]).nextListIndex ++;
+            ((HTMLLabelTokenizerAttributes *)[_stack lastObject]).nextListIndex ++;
         }
         
         //add list bullet
-        HTMLToken *token = [[HTMLToken alloc] init];
+        HTMLLabelTokenizer *token = [[HTMLLabelTokenizer alloc] init];
         token.attributes = [[_stack lastObject] mutableCopy];
         token.attributes.parent = [_stack lastObject];
         token.attributes.bullet = YES;
@@ -902,7 +902,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
         
         //this is a non-collapsing break, so we
         //won't use the addLinebreaks method
-        HTMLToken *linebreak = [[HTMLToken alloc] init];
+        HTMLLabelTokenizer *linebreak = [[HTMLLabelTokenizer alloc] init];
         linebreak.attributes = [_stack lastObject];
         linebreak.text = @"\n";
         [_tokens addObject:linebreak];
@@ -969,7 +969,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 
 - (void)update;
 - (void)drawAtPoint:(CGPoint)point;
-- (HTMLToken *)tokenAtPosition:(CGPoint)point;
+- (HTMLLabelTokenizer *)tokenAtPosition:(CGPoint)point;
 
 @end
 
@@ -1029,7 +1029,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     NSInteger tokenCount = [_tokens count];
     for (NSInteger i = 0; i < tokenCount; i++)
     {
-        HTMLToken *token = _tokens[i];
+        HTMLLabelTokenizer *token = _tokens[i];
         HTMLStyles *styles = [_stylesheet stylesForToken:token];
         
         CGFloat oneEm = [@"m" sizeWithFont:styles.font].width;
@@ -1186,12 +1186,12 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     for (int i = 0 ; i < [_tokens count]; i ++)
     {
         CGRect frame = [_frames[i] CGRectValue];
-        HTMLToken *token = _tokens[i];
+        HTMLLabelTokenizer *token = _tokens[i];
         [token drawInRect:frame withStyles:[_stylesheet stylesForToken:token]];
     }
 }
 
-- (HTMLToken *)tokenAtPosition:(CGPoint)point
+- (HTMLLabelTokenizer *)tokenAtPosition:(CGPoint)point
 {
     if (!_frames) [self update];
     for (int i = 0; i < [_tokens count]; i++)
@@ -1211,7 +1211,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 
 - (CGSize)sizeForWidth:(CGFloat)width withHTMLStyles:(NSDictionary *)stylesheet
 {
-    HTMLTokenizer *tokenizer = [[HTMLTokenizer alloc] initWithHTML:self];
+    HTMLLabelTokenizerizer *tokenizer = [[HTMLLabelTokenizerizer alloc] initWithHTML:self];
     HTMLLayout *layout = [[HTMLLayout alloc] init];
     layout.tokens = tokenizer.tokens;
     layout.stylesheet = [HTMLStylesheet stylesheetWithDictionary:stylesheet];
@@ -1221,7 +1221,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
 
 - (void)drawInRect:(CGRect)rect withHTMLStyles:(NSDictionary *)stylesheet
 {
-    HTMLTokenizer *tokenizer = [[HTMLTokenizer alloc] init];
+    HTMLLabelTokenizerizer *tokenizer = [[HTMLLabelTokenizerizer alloc] init];
     HTMLLayout *layout = [[HTMLLayout alloc] init];
     layout.tokens = tokenizer.tokens;
     layout.stylesheet = [HTMLStylesheet stylesheetWithDictionary:stylesheet];
@@ -1252,7 +1252,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     _layout = [[HTMLLayout alloc] init];
     self.stylesheet = nil;
 
-    HTMLTokenizer *tokenizer = [[HTMLTokenizer alloc] initWithHTML:self.text];
+    HTMLLabelTokenizerizer *tokenizer = [[HTMLLabelTokenizerizer alloc] initWithHTML:self.text];
     _layout.tokens = tokenizer.tokens;
     [self setNeedsDisplay];
 }
@@ -1281,7 +1281,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     if (![super.text isEqualToString:text])
     {
         super.text = text;
-        HTMLTokenizer *tokenizer = [[HTMLTokenizer alloc] initWithHTML:self.text];
+        HTMLLabelTokenizerizer *tokenizer = [[HTMLLabelTokenizerizer alloc] initWithHTML:self.text];
         _layout.tokens = tokenizer.tokens;
         [self setNeedsDisplay];
     }
@@ -1347,7 +1347,7 @@ NSString *const HTMLTextAlignment = @"textAlignment";
     [self setNeedsDisplay];
     
     UITouch *touch = [touches anyObject];
-    HTMLToken *token = [_layout tokenAtPosition:[touch locationInView:self]];
+    HTMLLabelTokenizer *token = [_layout tokenAtPosition:[touch locationInView:self]];
     if (token.attributes.href)
     {
         NSURL *URL = [NSURL URLWithString:token.attributes.href];
